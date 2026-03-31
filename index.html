@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title> Interactive DOM Traversal</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        /* Header Styling */
+        .header {
+            border: 2px solid black;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Node Styling */
+        .node {
+            padding: 10px;
+            margin: 10px;
+            border: 2px solid #333;
+            cursor: pointer;
+        }
+
+        .grandparent {
+            background-color: #ffd966;
+        }
+
+        .parent {
+            background-color: #9fc5e8;
+            margin-left: 30px;
+        }
+
+        .child {
+            background-color: #b6d7a8;
+            margin-left: 60px;
+        }
+
+        /* Highlight selected node */
+        .highlight {
+            border: 3px solid red;
+        }
+
+        /* Buttons */
+        .controls {
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER SECTION -->
+    <div class="header">
+        <h2>Student Profile</h2>
+        <p><b>Name:</b> Vinzent Alexis V. Tanacio</p>
+        <p><b>Sex:</b> Male</p>
+        <p><b>Address:</b> Bongliw, Pugay, San Jose, Camarines Sur</p>
+        <p><b>Course/Year/Section:</b> BSIT 2D</p>
+        <p><b>School:</b> Partido State University (GOA CAMPUS)</p>
+        <p><b>Semester & AY:</b> 2nd Semester, 2025-2026</p>
+        <p><b>Subject:</b>Event Driven Programming</p>
+        <p><b>Instructor:</b> Arjay F. Abio</p>
+    </div>
+
+    <!-- TREE STRUCTURE -->
+    <div id="tree">
+        <div class="node grandparent">
+            Grandparent
+            <div class="node parent">
+                Parent 1
+                <div class="node child">Child 1</div>
+                <div class="node child">Child 2</div>
+            </div>
+            <div class="node parent">
+                Parent 2
+                <div class="node child">Child 1</div>
+                <div class="node child">Child 2</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+        <button onclick="traverseUp()">Traverse Up</button>
+        <button onclick="traverseDown()">Traverse Down</button>
+        <button onclick="nextSibling()">Next Sibling</button>
+        <button onclick="prevSibling()">Previous Sibling</button>
+        <button onclick="addChild()">Add Child</button>
+        <button onclick="deleteNode()">Delete Current</button>
+    </div>
+
+    <script>
+        let selectedNode = null;
+
+        // FUNCTION: Select Node
+        document.querySelectorAll('.node').forEach(node => {
+            node.addEventListener('click', function (e) {
+                e.stopPropagation(); // Prevent parent selection
+
+                if (selectedNode) {
+                    selectedNode.classList.remove('highlight');
+                }
+
+                selectedNode = this;
+                selectedNode.classList.add('highlight');
+            });
+        });
+
+        // FUNCTION: Traverse Up
+        function traverseUp() {
+            if (selectedNode && selectedNode.parentElement.closest('.node')) {
+                let parent = selectedNode.parentElement.closest('.node');
+                updateSelection(parent);
+            }
+        }
+
+        // FUNCTION: Traverse Down (first child)
+        function traverseDown() {
+            if (selectedNode) {
+                let child = selectedNode.querySelector('.node');
+                if (child) updateSelection(child);
+            }
+        }
+
+        // FUNCTION: Next Sibling
+        function nextSibling() {
+            if (selectedNode && selectedNode.nextElementSibling) {
+                updateSelection(selectedNode.nextElementSibling);
+            }
+        }
+
+        // FUNCTION: Previous Sibling
+        function prevSibling() {
+            if (selectedNode && selectedNode.previousElementSibling) {
+                updateSelection(selectedNode.previousElementSibling);
+            }
+        }
+
+        // FUNCTION: Add Child
+        function addChild() {
+            if (!selectedNode) return;
+
+            // If grandparent → add parent with 2 children
+            if (selectedNode.classList.contains('grandparent')) {
+                let newParent = document.createElement('div');
+                newParent.className = 'node parent';
+                newParent.innerText = 'New Parent';
+
+                for (let i = 1; i <= 2; i++) {
+                    let child = document.createElement('div');
+                    child.className = 'node child';
+                    child.innerText = 'Child ' + i;
+                    newParent.appendChild(child);
+                }
+
+                selectedNode.appendChild(newParent);
+                attachClick(newParent);
+
+            } 
+            // If parent → add child
+            else if (selectedNode.classList.contains('parent')) {
+                let child = document.createElement('div');
+                child.className = 'node child';
+                child.innerText = 'New Child';
+
+                selectedNode.appendChild(child);
+                attachClick(child);
+            } 
+            // If child → not allowed
+            else {
+                alert("Cannot add child to a child node.");
+            }
+        }
+
+        // FUNCTION: Delete Node
+        function deleteNode() {
+            if (!selectedNode) return;
+
+            if (selectedNode.classList.contains('grandparent')) {
+                alert("Cannot delete the grandparent node.");
+                return;
+            }
+
+            let parent = selectedNode.parentElement;
+            selectedNode.remove();
+            selectedNode = null;
+        }
+
+        // FUNCTION: Update Selection
+        function updateSelection(node) {
+            if (selectedNode) {
+                selectedNode.classList.remove('highlight');
+            }
+            selectedNode = node;
+            selectedNode.classList.add('highlight');
+        }
+
+        // FUNCTION: Attach click to dynamically added nodes
+        function attachClick(element) {
+            element.addEventListener('click', function (e) {
+                e.stopPropagation();
+
+                if (selectedNode) {
+                    selectedNode.classList.remove('highlight');
+                }
+
+                selectedNode = this;
+                selectedNode.classList.add('highlight');
+            });
+
+            // Attach to children if any
+            element.querySelectorAll('.node').forEach(child => {
+                attachClick(child);
+            });
+        }
+
+    </script>
+
+</body>
+</html>
